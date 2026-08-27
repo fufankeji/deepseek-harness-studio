@@ -14,7 +14,9 @@
   !endif
 
   ${If} ${FileExists} "$3\${APP_EXECUTABLE_FILENAME}"
-    ExecWait '"$3\${APP_EXECUTABLE_FILENAME}" --dsh-installer-quit'
+    # The signal-only secondary Electron instance can outlive the primary quit
+    # request, so never let its lifetime block the installer.
+    Exec '"$3\${APP_EXECUTABLE_FILENAME}" --dsh-installer-quit'
     Sleep 3000
   ${EndIf}
 

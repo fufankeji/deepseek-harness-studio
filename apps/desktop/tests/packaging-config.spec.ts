@@ -166,7 +166,12 @@ describe('desktop packaging configuration', () => {
     )
     expect(windowsInstallerInclude).toContain('StrCpy $3 "$EXEDIR"')
     expect(windowsInstallerInclude).toContain('StrCpy $3 "$INSTDIR"')
-    expect(windowsInstallerInclude).toContain('ExecWait')
+    expect(windowsInstallerInclude).toContain(
+      'Exec \'"$3\\${APP_EXECUTABLE_FILENAME}" --dsh-installer-quit\'',
+    )
+    expect(windowsInstallerInclude).not.toContain(
+      'ExecWait \'"$3\\${APP_EXECUTABLE_FILENAME}" --dsh-installer-quit\'',
+    )
     expect(windowsInstallerInclude).toContain('taskkill.exe')
     expect(windowsInstallerInclude).toContain('/T /F /IM "${APP_EXECUTABLE_FILENAME}"')
     expect(windowsInstallerInclude).toContain('Get-CimInstance -ClassName Win32_Process')
