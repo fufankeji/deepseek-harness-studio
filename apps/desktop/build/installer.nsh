@@ -50,16 +50,24 @@
   ${EndIf}
 
   !ifndef BUILD_UNINSTALLER
-    # Preview upgrades and incomplete uninstalls both replace only the
-    # dedicated product directory before the stock installer can re-enter an
-    # older preview uninstaller. User data lives outside this directory.
+    # Preview upgrades and incomplete uninstalls replace only the selected
+    # registered directory or the dedicated default product directory before
+    # the stock installer can re-enter an older preview uninstaller.
     ReadRegStr $1 SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "DisplayVersion"
     ReadRegStr $2 SHELL_CONTEXT "${INSTALL_REGISTRY_KEY}" "InstallLocation"
     StrCpy $4 "0"
     ${If} $2 != ""
-      StrLen $5 "\${APP_FILENAME}"
-      StrCpy $6 "$2" $5 -$5
-      ${If} $6 == "\${APP_FILENAME}"
+      StrCpy $8 "0"
+      ${If} $2 == "$INSTDIR"
+        StrCpy $8 "1"
+      ${Else}
+        StrLen $5 "\${APP_FILENAME}"
+        StrCpy $6 "$2" $5 -$5
+        ${If} $6 == "\${APP_FILENAME}"
+          StrCpy $8 "1"
+        ${EndIf}
+      ${EndIf}
+      ${If} $8 == "1"
         ${IfNot} ${FileExists} "$2\${APP_EXECUTABLE_FILENAME}"
           StrCpy $4 "1"
         ${EndIf}
@@ -72,7 +80,7 @@
         ${EndIf}
       ${EndIf}
       ${If} $4 == "1"
-        DetailPrint "Removing an incomplete DeepSeek Harness installation at $2"
+        DetailPrint "Replacing a DeepSeek Harness preview installation at $2"
         RMDir /r "$2"
         DeleteRegValue SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "UninstallString"
         DeleteRegValue SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "QuietUninstallString"

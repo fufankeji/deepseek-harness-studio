@@ -188,9 +188,12 @@ describe('desktop packaging configuration', () => {
     expect(windowsInstallerInclude).toContain(
       'ReadRegStr $2 SHELL_CONTEXT "${INSTALL_REGISTRY_KEY}" "InstallLocation"',
     )
+    expect(windowsInstallerInclude).toContain('${If} $2 == "$INSTDIR"')
+    expect(windowsInstallerInclude).toContain('StrCpy $8 "1"')
     expect(windowsInstallerInclude).toContain('StrLen $5 "\\${APP_FILENAME}"')
     expect(windowsInstallerInclude).toContain('StrCpy $6 "$2" $5 -$5')
     expect(windowsInstallerInclude).toContain('${If} $6 == "\\${APP_FILENAME}"')
+    expect(windowsInstallerInclude).toContain('${If} $8 == "1"')
     expect(windowsInstallerInclude).toContain(
       '${IfNot} ${FileExists} "$2\\${APP_EXECUTABLE_FILENAME}"',
     )

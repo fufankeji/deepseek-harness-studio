@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-08-18-windows-residual-install-repair.md
-2026-08-18-windows-residual-install-repair.md: 8e08a9ae6e32365c1fc821af030255b87b62d117
-2026-08-18-windows-residual-install-repair.zh.md: dfab9ade3be87eb21a09a5b4a36bbb16f8d46bf4
+2026-08-18-windows-residual-install-repair.md: 65ce3a4527f680e8dc4e8866f47f346b2e7862a1
+2026-08-18-windows-residual-install-repair.zh.md: 8f90ad4db67bf229efab7a299d65a39cd057facd
