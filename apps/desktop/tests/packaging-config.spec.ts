@@ -178,11 +178,8 @@ describe('desktop packaging configuration', () => {
     expect(forcedCleanup).toBeGreaterThan(fileCheckEnd)
     expect(windowsInstallerInclude).toContain('Pop $0')
     expect(windowsInstallerInclude).toContain('Sleep 3000')
-    expect(windowsInstallerInclude).toContain('$1 == "0.1.0-rc.5"')
-    expect(windowsInstallerInclude).toContain('$1 == "0.1.0-rc.6"')
-    expect(windowsInstallerInclude).toContain('$1 == "0.1.0-rc.7"')
-    expect(windowsInstallerInclude).toContain('$1 == "0.1.0-rc.8"')
-    expect(windowsInstallerInclude).toContain('$1 == "0.1.0-rc.9"')
+    expect(windowsInstallerInclude).toContain('StrCpy $7 "$1" 9')
+    expect(windowsInstallerInclude).toContain('${If} $7 == "0.1.0-rc."')
     expect(windowsInstallerInclude).toContain(
       'ReadRegStr $2 SHELL_CONTEXT "${INSTALL_REGISTRY_KEY}" "InstallLocation"',
     )

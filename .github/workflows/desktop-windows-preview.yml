@@ -251,7 +251,18 @@ jobs:
             throw "The bundled pnpm command reported '$pnpmVersion'; expected '$expectedPnpmVersion'."
           }
 
-          taskkill /PID $applicationProcess.Id /T /F | Out-Host
+          Invoke-HarnessInstaller 'in-place-preview-upgrade'
+          $applicationProcess.Refresh()
+          if (-not $applicationProcess.HasExited) {
+            taskkill /PID $applicationProcess.Id /T /F | Out-Host
+            throw 'The in-place preview upgrade left the previous application process running.'
+          }
+          $upgradedApplications = @(Get-ChildItem (Join-Path $env:LOCALAPPDATA 'Programs') `
+            -Recurse -File -Filter 'DeepSeek Harness.exe' -ErrorAction SilentlyContinue)
+          if ($upgradedApplications.Count -ne 1) {
+            throw "Expected one upgraded application; found $($upgradedApplications.Count)."
+          }
+          $application = $upgradedApplications[0]
           $uninstallers = @(Get-ChildItem $application.DirectoryName -File -Filter 'Uninstall*.exe')
           if ($uninstallers.Count -ne 1) {
             throw "Expected exactly one uninstaller; found $($uninstallers.Count)."
@@ -314,6 +325,7 @@ jobs:
             'silent_install=PASS',
             'packaged_host_start=PASS',
             'bundled_pnpm_command=PASS',
+            'in_place_preview_upgrade=PASS',
             'silent_uninstall=PASS',
             'manually_deleted_install_repair=PASS',
             'repaired_uninstaller=PASS',

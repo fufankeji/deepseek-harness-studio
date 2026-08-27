@@ -368,7 +368,14 @@ jobs:
           } else {
             $windowsVisionStatus = 'SKIPPED'
           }
-          Invoke-RunningUninstall $freshApplication 'fresh'
+          $inPlaceUpgradeSeconds = Invoke-HarnessInstaller 'in-place-upgrade'
+          $freshApplication.Refresh()
+          if (-not $freshApplication.HasExited) {
+            taskkill /PID $freshApplication.Id /T /F | Out-Host
+            throw 'The in-place upgrade left the previous application process running.'
+          }
+          $upgradedApplication = Start-Harness 'in-place-upgrade'
+          Invoke-RunningUninstall $upgradedApplication 'in-place-upgrade'
 
           $reinstallSeconds = Invoke-HarnessInstaller 'reinstall'
           $reinstalledApplication = Start-Harness 'reinstall'
@@ -384,6 +391,7 @@ jobs:
             'assisted_install_directory=PASS',
             'running_uninstall=PASS',
             'same_directory_reinstall=PASS',
+            'running_in_place_upgrade=PASS',
             'reinstalled_packaged_host_start=PASS',
             'manually_deleted_install_repair=PASS',
             'repaired_packaged_host_start=PASS',
@@ -391,6 +399,7 @@ jobs:
             "installed_v4_vision=$windowsVisionStatus",
             'differential_update_blockmap=PASS',
             "fresh_install_seconds=$freshInstallSeconds",
+            "in_place_upgrade_seconds=$inPlaceUpgradeSeconds",
             "reinstall_seconds=$reinstallSeconds",
             "repair_seconds=$repairSeconds",
             "installer_sha256=$hash"

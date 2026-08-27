@@ -8,7 +8,7 @@ Status: implemented
 
 桌面应用需要 Electron 窗口和由托盘拥有的应用生命周期，同时不能让窗口拥有 Harness 工作。关闭窗口必须让会话和后台工作继续运行，显式退出应用则必须 dispose（资源释放）Harness 进程并等待其后代进程结束。如果同时构建最终的 Electron IPC 载体，首个可用壳在交付前还必须具备打包后的客户端模块 loader、IPC 流式传输、原生操作路由和新的渲染器安全边界。
 
-现有 Web profile 已经提供完整的交互客户端、ApiProxy 校验、会话回放、审批处理、配置界面和原生 Host 操作。首个桌面实现需要复用这些行为，但不能让其进程安排成为永久约束，也不能削弱[通道无关的 GUI 协议](2026-07-19-gui-layering-and-rpc-protocol.md)。
+现有 Web profile 已经提供完整的交互客户端、ApiProxy 校验、会话回放、审批处理、配置界面和原生 Host 操作。首个桌面实现需要复用这些行为，但不能让其进程安排成为永久约束，也不能削弱[通道无关的 GUI 协议](2026-07-19-gui-layering-and-rpc-protocol.zh.md)。
 
 ## 决策
 
@@ -22,7 +22,7 @@ Status: implemented
 
 macOS 和 Windows 使用同一个受跟踪的 `apps/desktop/build/icon.png` 输入，仓库不转换该文件。本地 `package:desktop` 生成未封装产物，不要求发布凭据。独立的 `dist:mac:desktop` 入口启用 hardened runtime，强制签名，并在创建 DMG 前要求一组完整的 Electron Builder 公证凭据。签名既可使用包含 `Developer ID Application` 证书及私钥的持久 Keychain 身份，也可使用由 Electron Builder 导入临时 Keychain 的 Base64 PKCS#12 凭据。发布 wrapper 不会把签名与公证变量传给仓库构建和运行时暂存，只会将其传给 Electron Builder。预检查会在仓库构建前拒绝非 macOS 宿主、已禁用的身份发现、非 Developer ID 身份，以及缺失或不完整的凭据。公证凭据可来自 `notarytool` Keychain profile、完整的 Apple ID 凭据组或 App Store Connect API 密钥凭据组。
 
-根目录的 `dist:win:desktop` 入口会构建引导式 Windows x64 NSIS 安装包。引导流程默认安装给当前用户，也提供所有用户模式和自定义安装目录。运行时暂存会显式面向 `win32-x64`，打包前门禁除了普通 Host 与 Web 入口，还必须看见 Windows Koffi、Sharp、node-addon loader 与 node-pty 二进制。Electron Builder 会解析目标平台的 Electron 发行版，不会复用构建宿主已安装的 Electron。macOS 上的发布 wrapper 会通过短临时符号链接暴露 app-builder-lib 的 NSIS 模板，因为 NSIS 的 POSIX `__FILEDIR__` 实现仍使用固定的 260 字符缓冲区；Builder 结束后删除该链接。替换或移除现有安装前，NSIS 会带私有参数 `--dsh-installer-quit` 启动已安装的可执行文件，为 Host 有序 dispose 留出五秒，再以两次有界尝试按确定的可执行文件名终止完整进程树。如果仍有进程存活，操作会明确失败，不会继续形成半卸载状态。公开的 `0.1.0-rc.5` 至 `0.1.0-rc.7` 安装还带有同目录修复路径：注册位置与所选目录一致时，替换安装器会移除失败卸载器的两项命令值，原位覆盖应用，并由普通安装阶段重新建立完整卸载注册。应用目录不含 Profile 数据。在配置 Authenticode 证书前，Windows 内部测试包保持未签名。
+根目录的 `dist:win:desktop` 入口会构建引导式 Windows x64 NSIS 安装包。引导流程默认安装给当前用户，也提供所有用户模式和自定义安装目录。运行时暂存会显式面向 `win32-x64`，打包前门禁除了普通 Host 与 Web 入口，还必须看见 Windows Koffi、Sharp、node-addon loader 与 node-pty 二进制。Electron Builder 会解析目标平台的 Electron 发行版，不会复用构建宿主已安装的 Electron。macOS 上的发布 wrapper 会通过短临时符号链接暴露 app-builder-lib 的 NSIS 模板，因为 NSIS 的 POSIX `__FILEDIR__` 实现仍使用固定的 260 字符缓冲区；Builder 结束后删除该链接。替换或移除现有安装前，NSIS 会带私有参数 `--dsh-installer-quit` 启动已安装的可执行文件，为 Host 有序 dispose 留出五秒，再以两次有界尝试按确定的可执行文件名终止完整进程树。如果仍有进程存活，操作会明确失败，不会继续形成半卸载状态。每个已注册的 `0.1.0-rc.*` 预览版安装都带有同目录替换路径：注册位置属于专属产品目录时，替换安装器会删除旧应用和两项卸载命令值，再由普通安装阶段重新创建载荷和完整卸载注册，而不会调用更旧的预览版卸载器。应用目录不含 Profile 数据。在配置 Authenticode 证书前，Windows 内部测试包保持未签名。
 
 `.github/workflows/desktop-release.yml` 是 GitHub 安装包发布入口。它只接受与 `apps/desktop/package.json` 完全匹配的不可变 `desktop-v<version>` 标签，然后在原生托管运行器上分别构建经过签名和公证的 macOS arm64 DMG 与更新 ZIP，以及带 Authenticode 签名的 Windows x64 NSIS 安装包。每个平台先验证自身签名，再上传短期工作流工件。最终作业必须同时取得两个平台的结果，生成 `SHA256SUMS`，用全部资产创建草稿 GitHub Release，并且只在完整上传成功后公开。仓库 README 会在首个安装包产生前链接 Releases 页面，但不会把源码压缩包或未封装应用描述为可下载安装包。仅手动触发的 Windows 安装器生命周期工作流会构建不修改 Release 的未签名分支产物，将其安装到非默认目录，启动打包 Host，在应用运行时卸载，重新安装到同一目录，再重复启动与卸载检查。
 

@@ -48,10 +48,9 @@
   ${EndIf}
 
   !ifndef BUILD_UNINSTALLER
-    # A manually deleted or failed preview uninstall can leave an unusable
-    # uninstaller registration and a partial application directory behind.
-    # Repair only the dedicated product directory before the stock installer
-    # attempts to launch that stale uninstaller.
+    # Preview upgrades and incomplete uninstalls both replace only the
+    # dedicated product directory before the stock installer can re-enter an
+    # older preview uninstaller. User data lives outside this directory.
     ReadRegStr $1 SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "DisplayVersion"
     ReadRegStr $2 SHELL_CONTEXT "${INSTALL_REGISTRY_KEY}" "InstallLocation"
     StrCpy $4 "0"
@@ -65,11 +64,8 @@
         ${IfNot} ${FileExists} "$2\${UNINSTALL_FILENAME}"
           StrCpy $4 "1"
         ${EndIf}
-        ${If} $1 == "0.1.0-rc.5"
-        ${OrIf} $1 == "0.1.0-rc.6"
-        ${OrIf} $1 == "0.1.0-rc.7"
-        ${OrIf} $1 == "0.1.0-rc.8"
-        ${OrIf} $1 == "0.1.0-rc.9"
+        StrCpy $7 "$1" 9
+        ${If} $7 == "0.1.0-rc."
           StrCpy $4 "1"
         ${EndIf}
       ${EndIf}

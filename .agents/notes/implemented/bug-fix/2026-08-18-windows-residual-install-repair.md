@@ -10,11 +10,11 @@ A user can delete an installed Desktop directory or encounter an incomplete lega
 
 ## Decision
 
-The Windows installer closes the application and its owned process tree before inspecting the registered installation. A missing application executable, a missing uninstaller, or a registered `0.1.0-rc.5` through `0.1.0-rc.9` preview identifies a repairable installation only when the registered path ends in the dedicated `DeepSeek Harness` directory. The installer then removes that application directory and the two stale uninstall commands before Electron Builder runs its old-version step. The normal payload extraction recreates the directory and complete uninstall registration. Profile, workspace, credentials, and plugin data remain outside the application directory.
+The Windows installer closes the application and its owned process tree before inspecting the registered installation. A missing application executable, a missing uninstaller, or any registered `0.1.0-rc.*` preview identifies a repairable installation only when the registered path ends in the dedicated `DeepSeek Harness` directory. The installer then removes that application directory and the two stale uninstall commands before Electron Builder runs its old-version step. The normal payload extraction recreates the directory and complete uninstall registration. Profile, workspace, credentials, and plugin data remain outside the application directory.
 
 ## Verification
 
-Packaging configuration coverage pins the dedicated-directory check, incomplete-file detection, affected preview range, residual removal, and uninstall-command cleanup. The native Windows lifecycle workflow installs and launches the packaged Host, preserves the registry while deleting the application directory, runs the same installer again, launches the repaired Host, and completes a running uninstall.
+Packaging configuration coverage pins the dedicated-directory check, incomplete-file detection, preview-family detection, residual removal, and uninstall-command cleanup. The native Windows lifecycle workflow installs and launches the packaged Host, runs the same installer over the running preview, launches that replacement, completes a running uninstall, then separately preserves the registry while deleting the application directory and verifies residual repair.
 
 ## Alternatives considered
 
