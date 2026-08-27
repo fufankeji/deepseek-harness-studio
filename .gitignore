@@ -2,6 +2,8 @@ CLAUDE.local.md
 .env
 node_modules/
 lib/
+!packages/examples/ff-llm-wiki-plugin/application/apps/web/src/lib/
+!packages/examples/ff-llm-wiki-plugin/application/apps/web/src/lib/*.ts
 *.tsbuildinfo
 pnpm-debug.log
 .pnpm-store/
