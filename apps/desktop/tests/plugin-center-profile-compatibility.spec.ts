@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -130,6 +130,21 @@ describe('selected Profile compatibility projection', () => {
     const current = fixture()
     writeFileSync(join(current.profile, 'package.json'), '[]\n')
     expect(() => read(current.home)).toThrow('must hold an object')
+  })
+
+  it('projects BOM-prefixed Profile and installed Bundle manifests', () => {
+    const current = fixture()
+    const profileManifest = join(current.profile, 'package.json')
+    const bundleManifest = join(
+      current.profile,
+      'node_modules/@local/unknown-bundle/package.json',
+    )
+    writeFileSync(profileManifest, `\uFEFF${readFileSync(profileManifest, 'utf8')}`)
+    writeFileSync(bundleManifest, `\uFEFF${readFileSync(bundleManifest, 'utf8')}`)
+
+    const fingerprint = read(current.home)
+    expect(fingerprint.installedPlugins.find(plugin => plugin.packageName === '@local/unknown-bundle'))
+      .toMatchObject({ enabled: true, version: '0.3.0' })
   })
 
   it('rejects ambiguous active and disabled Profile state', () => {

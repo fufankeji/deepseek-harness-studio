@@ -62,6 +62,16 @@ function packageManifestPath(profileDirectory: string, packageName: string): str
   return join(profileDirectory, 'node_modules', ...segments, 'package.json')
 }
 
+function parseManifest(bytes: Buffer, path: string): Record<string, unknown> {
+  const source = bytes.toString('utf8')
+  const normalized = source.charCodeAt(0) === 0xFEFF ? source.slice(1) : source
+  try {
+    return record(JSON.parse(normalized) as unknown, path)
+  } catch (error) {
+    throw new Error(`failed to parse package manifest ${path}: ${String(error)}`, { cause: error })
+  }
+}
+
 function bundleEntryIds(patch: string, label: string): readonly string[] {
   const ids = new Set<string>()
   for (const [index, line] of patch.split(/\r?\n/u).entries()) {
@@ -99,7 +109,7 @@ function installedIdentity(
 ): InstalledPluginIdentity | undefined {
   const manifestPath = packageManifestPath(profileDirectory, packageName)
   const bytes = addFile(hash, `package:${packageName}`, manifestPath, true)
-  const manifest = record(JSON.parse(bytes.toString('utf8')) as unknown, manifestPath)
+  const manifest = parseManifest(bytes, manifestPath)
   const version = manifest['version']
   if (manifest['name'] !== packageName || typeof version !== 'string' || !EXACT_VERSION.test(version)) {
     throw new Error(`${manifestPath} does not declare its exact installed identity`)
@@ -141,7 +151,7 @@ export function readProfileCompatibilityFingerprint(input: ProfileCompatibilityR
   const manifestBytes = addFile(hash, 'profile-manifest', manifestPath, true)
   addFile(hash, 'profile-patch', join(profileDirectory, 'cordis.patch.yml'), false)
   addFile(hash, 'profile-lock', join(profileDirectory, 'pnpm-lock.yaml'), false)
-  const manifest = record(JSON.parse(manifestBytes.toString('utf8')) as unknown, manifestPath)
+  const manifest = parseManifest(manifestBytes, manifestPath)
   const dsh = optionalRecord(manifest['dsh'], `${manifestPath} dsh`)
   const profile = optionalRecord(dsh?.['profile'], `${manifestPath} dsh.profile`)
   const dependencyNames = packageNames(manifest['dependencies'], `${manifestPath} dependencies`)
